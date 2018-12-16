@@ -1,0 +1,12 @@
+Server was created using node.js, express, and socket.io
+
+If you're having issues running, try:
+
+
+cmd, cd to directory, type node app.js
+or
+run app.js in IDE
+
+Go to: http://localhost:1337/ in web browser
+
+To create more players: go to localhost link multiple times

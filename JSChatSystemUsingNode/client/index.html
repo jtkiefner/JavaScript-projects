@@ -1,0 +1,119 @@
+<canvas id="ctx" width="600" height="400" style="border:1px solid #000000;"></canvas>
+<div id="chat-text" style="width: 600px; height: 100px; overflow-y: scroll">
+    <div>Say something!</div>
+    <div>Player names have been randomized.</div>
+</div>
+
+<form id="chat-form">
+    <input id="chat-input" type="text" style="width: 500px"/>
+</form>
+
+<script src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
+<script>
+
+    //Chat Room
+    var chatText = document.getElementById('chat-text');
+    var chatInput = document.getElementById('chat-input');
+    var chatForm = document.getElementById('chat-form');
+    var ctx = document.getElementById("ctx").getContext("2d");
+    ctx.font = '30px Arial';
+    var imageObj = new Image();
+    imageObj.onload = function () {
+        ctx.drawImage(imageObj, 0, 0);
+    };
+    imageObj.src = 'http://hugoware.net/resource/images/misc/game-background.jpg';
+
+    //Socket
+    var socket = io();
+    var marioAnimate = 0;
+
+
+    socket.on('newPositions', function (data) {
+        //A counter for Mario's animation
+        marioAnimate++;
+        //console.log("marioAnimate " + marioAnimate);
+
+        //Mario, Player 1
+        img = new Image();
+        img.src = '/client/img/mario1.png';
+
+        //Goomba
+        img2 = new Image();
+        img2.src = '/client/img/GoombaRes.png';
+
+        img3 = new Image();
+        img3.src = '/client/img/turtle.png';
+
+        //Animates Mario
+        if(marioAnimate === 1){
+            img.src = '/client/img/mario1.png';
+        }
+        else if (marioAnimate === 2){
+            img.src = '/client/img/mario2.png';
+        }
+        else if (marioAnimate === 3){
+            img.src = '/client/img/mario3.png';
+        }
+        else if (marioAnimate === 4){
+            img.src = '/client/img/mario4.png';
+        }
+        else if (marioAnimate === 5){
+            img.src = '/client/img/mario5.png';
+            marioAnimate = 0;
+        }
+
+        ctx.clearRect(0, 0, 600, 400);
+        ctx.drawImage(imageObj, 0, 0); //Must be drawn before the sprites. Drawing after will place it on top of the sprites.
+
+        for (var i = 0; i < data.player.length; i++) {
+            if (i === 0) {
+                //First Player is Mario
+                ctx.drawImage(img, data.player[i].x, data.player[i].y);
+            }
+            else if (i === 1) {
+                //Second Player is Goomba
+                ctx.drawImage(img2, data.player[i].x, data.player[i].y);
+            }
+            else{
+                //Third Player and consecutive players are turtles
+                //Cause it's funny
+                ctx.drawImage(img3, data.player[i].x, data.player[i].y);
+            }
+        }
+    });
+
+    socket.on('addChat', function (data) {
+        chatText.innerHTML += '<div>' + data + '</div>';
+    });
+
+    chatForm.onsubmit = function (e) {
+        e.preventDefault();
+        socket.emit('sendMsg', chatInput.value);
+        chatInput.value = '';
+    }
+
+
+    //Game Presses
+    document.onkeydown = function (event) {
+        if (event.keyCode === 68)    //d
+            socket.emit('keyPress', {inputId: 'right', state: true});
+        else if (event.keyCode === 83)   //s
+            socket.emit('keyPress', {inputId: 'down', state: true});
+        else if (event.keyCode === 65) //a
+            socket.emit('keyPress', {inputId: 'left', state: true});
+        else if (event.keyCode === 87) // w
+            socket.emit('keyPress', {inputId: 'up', state: true});
+
+    }
+    document.onkeyup = function (event) {
+        if (event.keyCode === 68)    //d
+            socket.emit('keyPress', {inputId: 'right', state: false});
+        else if (event.keyCode === 83)   //s
+            socket.emit('keyPress', {inputId: 'down', state: false});
+        else if (event.keyCode === 65) //a
+            socket.emit('keyPress', {inputId: 'left', state: false});
+        else if (event.keyCode === 87) // w
+            socket.emit('keyPress', {inputId: 'up', state: false});
+    }
+
+</script>
